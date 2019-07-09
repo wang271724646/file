@@ -163,7 +163,7 @@ public class FileController {
 
     }*/
 
-    @GetMapping(value = "/list")
+    /*@GetMapping(value = "/list")
     public void listDirectory() {
 
         List<Directory> listDirectory = directoryDao.listDirectory();
@@ -208,5 +208,5 @@ public class FileController {
         System.out.println(directoryArrayList);
 
      return list;
-    }
+    }*/
 }
