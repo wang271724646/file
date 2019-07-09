@@ -163,7 +163,7 @@ public class FileController {
 
     }*/
 
-   /* @GetMapping(value = "/list")
+    @GetMapping(value = "/list")
     public void listDirectory() {
 
         List<Directory> listDirectory = directoryDao.listDirectory();
@@ -173,39 +173,40 @@ public class FileController {
         HashMap<String, Object> HashMap = new HashMap<>();
 
         listTopDirectory.stream().forEach(x->{
+            HashMap.put("id",x.getId());
+            HashMap.put("pid","0");
+            HashMap.put("name",x.getName());
+            HashMap.put("path",x.getPath());
+            HashMap.put("children",getChildren(x.getId(),listDirectory,x))
 
-            HashMap.put("parent",x);
-            getChildren(x.getId(),listDirectory,x);
-            System.out.println(HashMap);
 
         });
 
     }
 
-    private void getChildren(Long id, List<Directory> listDirectory,Directory directory) {
+    private list getChildren(Long id, List<Directory> listDirectory,Directory directory) {
 
         listDirectory.stream().forEach(x->{
+
+            Map<String, Object> Map = new HashMap<>();
 
             ArrayList<Directory> directoryArrayList = new ArrayList<>(16);
 
             if (id.equals(x.getPid())){
 
-                Map<String, Object> Map = new HashMap<>();
-
                 directoryArrayList.add(x);
-
-                Map.put("children",directoryArrayList);
-
-                System.out.println(Map);
-
-                getChildren(x.getId(),listDirectory,directory);
 
             }
 
-            System.out.println(directoryArrayList);
-
         });
 
+        Map.put("Children",directoryArrayList);
 
-    }*/
+        getChildren(x.getId(),listDirectory,directory);
+
+        System.out.println(Map);
+        System.out.println(directoryArrayList);
+
+     return list;
+    }
 }
