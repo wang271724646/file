@@ -20,6 +20,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @ClassName FileController
@@ -149,64 +150,66 @@ public class FileController {
     }
 
 
+    @GetMapping(value = "/findNext/{id}")
+    public List<Directory> findNext(@PathVariable long id) {
 
-/*    @GetMapping(value = "/list")
-    public void listDirectory(@PathVariable long id) {
+        List<Directory> listDirectory = directoryDao.selectByPid(id);
 
-        Directory directory = directoryDao.selectByPrimaryKey(id);
-
-        String path = directory.getPath();
-
-
+        return listDirectory;
+    }
 
 
 
-    }*/
-
-    /*@GetMapping(value = "/list")
-    public void listDirectory() {
+    @GetMapping(value = "/list")
+    public List listDirectory() {
 
         List<Directory> listDirectory = directoryDao.listDirectory();
 
         List<Directory> listTopDirectory = directoryDao.selectByPid(new Long(0));
 
-        HashMap<String, Object> HashMap = new HashMap<>();
+        ArrayList list = new ArrayList<>();
 
-        listTopDirectory.stream().forEach(x->{
-            HashMap.put("id",x.getId());
-            HashMap.put("pid","0");
-            HashMap.put("name",x.getName());
-            HashMap.put("path",x.getPath());
-            HashMap.put("children",getChildren(x.getId(),listDirectory,x))
+           listTopDirectory.stream().forEach(x -> {
+
+               getChildren(list, listDirectory, x);
+
+           });
 
 
-        });
+
+        return list;
 
     }
 
-    private list getChildren(Long id, List<Directory> listDirectory,Directory directory) {
+    private Map getChildren(List list, List<Directory> listDirectory, Directory directory) {
 
-        listDirectory.stream().forEach(x->{
+        Map<String, Object> Map = new HashMap<>();
 
-            Map<String, Object> Map = new HashMap<>();
+        Map.put("id",directory.getId());
+        Map.put("pid",directory.getPid());
+        Map.put("name",directory.getName());
+        Map.put("path",directory.getPath());
 
-            ArrayList<Directory> directoryArrayList = new ArrayList<>(16);
+        List<Directory> collect = listDirectory.stream().filter(x -> directory.getId().equals(x.getPid()))
+                                                         .collect(Collectors.toList());
 
-            if (id.equals(x.getPid())){
+        if (collect.size() != 0 ){
 
-                directoryArrayList.add(x);
+            List childList = new ArrayList();
 
-            }
+            collect.stream().forEach(d -> {
 
-        });
+                childList.add(getChildren(list, listDirectory, d));
 
-        Map.put("Children",directoryArrayList);
+            });
 
-        getChildren(x.getId(),listDirectory,directory);
+            Map.put("children",childList);
+        }
 
-        System.out.println(Map);
-        System.out.println(directoryArrayList);
+        if (new Long(0).equals(directory.getPid()))  list.add(Map);
 
-     return list;
-    }*/
+     return Map;
+
+    }
+
 }
