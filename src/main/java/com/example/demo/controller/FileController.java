@@ -150,7 +150,7 @@ public class FileController {
 
 
 
-    @GetMapping(value = "/list")
+/*    @GetMapping(value = "/list")
     public void listDirectory(@PathVariable long id) {
 
         Directory directory = directoryDao.selectByPrimaryKey(id);
@@ -161,7 +161,7 @@ public class FileController {
 
 
 
-    }
+    }*/
 
    /* @GetMapping(value = "/list")
     public void listDirectory() {
