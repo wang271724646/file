@@ -16,6 +16,8 @@ public class FileInfo implements Serializable {
 
     private Integer id;
 
+    private Long pid;
+
     private String fileName;
 
     private String fileType;

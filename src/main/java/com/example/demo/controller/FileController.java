@@ -1,22 +1,25 @@
 package com.example.demo.controller;
 
+import com.example.demo.dao.DirectoryDao;
 import com.example.demo.dao.FileDao;
+import com.example.demo.model.Directory;
 import com.example.demo.util.GetFileSize;
 import com.example.demo.model.FileInfo;
 import com.sun.deploy.net.URLEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * @ClassName FileController
@@ -29,21 +32,24 @@ import java.util.UUID;
 @RequestMapping(value = "/file")
 public class FileController {
 
+
     @Autowired
     private FileDao fileDao;
 
+    @Autowired
+    private DirectoryDao directoryDao;
+
     @PostMapping(value = "/upload")
-    public String fileUpload(@RequestParam("file") MultipartFile file) {
+    public String fileUpload(@RequestParam("file") MultipartFile file, @RequestParam("id") long id) {
 
         if (!file.isEmpty()) {
+
             //获得原始名字
             String fileName = file.getOriginalFilename();
-            //获得后缀
-            String suffixName = fileName.substring(fileName.lastIndexOf("."));
             //获得文件类型
             String fileContentType = file.getContentType();
             //获得文件大小
-            Long fileSize = file.getSize();
+            long fileSize = file.getSize();
             String printSize = GetFileSize.getPrintSize(fileSize);
             //最大文件大小10M
             final long MAX_SIZE = 1024 * 100 * 100;
@@ -56,7 +62,10 @@ public class FileController {
             //防止上传重复
             String newFileName = UUID.randomUUID() + "_" + fileName;
             //上传存储路径
-            String filePath = "E:/demo2/src/main/resources/file/";
+            String filePath = directoryDao.selectByPrimaryKey(id).getPath();
+            //拼接"/"才能存在文件夹内。
+            filePath = filePath + "/";
+            System.out.println(filePath);
             File saveFile = new File(filePath + newFileName);
             try {
 
@@ -74,7 +83,9 @@ public class FileController {
                     .setFileUpdated(new Date())
                     .setFilePath(filePath)
                     .setFileType(fileContentType)
-                    .setFileSize(printSize);
+                    .setFileSize(printSize)
+                    .setPid(id);
+
             fileDao.save(fileInfo);
 
             return "上传" + fileName + "成功";
@@ -83,9 +94,7 @@ public class FileController {
 
             return "上传文件不能为空";
         }
-
     }
-
 
     @GetMapping(value = "/down/{id}")
     public ResponseEntity<byte[]> fileDown(@PathVariable int id) throws IOException {
@@ -94,8 +103,6 @@ public class FileController {
         FileInfo fileInfo = fileDao.selectByPrimaryKey(id);
         //获得文件名字
         String fileName = fileInfo.getFileName();
-        //解析真实名字
-        String[] realFileNameArray = fileName.split("_");
         //得到文件路径
         String filePath = fileInfo.getFilePath();
         //得到文件
@@ -105,22 +112,100 @@ public class FileController {
         body = new byte[is.available()];
         is.read(body);
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Disposition", "attchement;filename=" + URLEncoder.encode(realFileNameArray[1], "UTF-8"));
+        headers.add("Content-Disposition", "attchement;filename=" + URLEncoder.encode(fileName, "UTF-8"));
         HttpStatus statusCode = HttpStatus.OK;
         ResponseEntity<byte[]> entity = new ResponseEntity<>(body, headers, statusCode);
 
         return entity;
-
     }
+
+
+    @PostMapping(value = "/addDirectory")
+    public String addDirectory(@RequestBody Directory directory) {
+
+        String Path = "E:\\demo2\\src\\main\\resources\\upload";
+
+        if (directory.getPid() == 0) {
+            //拼接存储路径
+            Path = Path + "\\" + directory.getName();
+            directory.setPath(Path);
+            directoryDao.insert(directory);
+            File file = new File(Path);
+            file.mkdirs();
+
+        } else {
+
+            String path = directoryDao.selectByPrimaryKey(directory.getPid()).getPath();
+            //拼接存储路径
+            Path = path + "\\" + directory.getName();
+            directory.setPath(Path);
+            directoryDao.insert(directory);
+            File file = new File(Path);
+            file.mkdirs();
+
+        }
+
+        return "添加" + directory.getName() + "成功";
+    }
+
 
 
     @GetMapping(value = "/list")
-    public List listFileInfo() {
+    public void listDirectory(@PathVariable long id) {
 
-        List<FileInfo> listFileInfo = fileDao.listFileInfo();
+        Directory directory = directoryDao.selectByPrimaryKey(id);
 
-        return listFileInfo;
+        String path = directory.getPath();
+
+
+
+
 
     }
 
+   /* @GetMapping(value = "/list")
+    public void listDirectory() {
+
+        List<Directory> listDirectory = directoryDao.listDirectory();
+
+        List<Directory> listTopDirectory = directoryDao.selectByPid(new Long(0));
+
+        HashMap<String, Object> HashMap = new HashMap<>();
+
+        listTopDirectory.stream().forEach(x->{
+
+            HashMap.put("parent",x);
+            getChildren(x.getId(),listDirectory,x);
+            System.out.println(HashMap);
+
+        });
+
+    }
+
+    private void getChildren(Long id, List<Directory> listDirectory,Directory directory) {
+
+        listDirectory.stream().forEach(x->{
+
+            ArrayList<Directory> directoryArrayList = new ArrayList<>(16);
+
+            if (id.equals(x.getPid())){
+
+                Map<String, Object> Map = new HashMap<>();
+
+                directoryArrayList.add(x);
+
+                Map.put("children",directoryArrayList);
+
+                System.out.println(Map);
+
+                getChildren(x.getId(),listDirectory,directory);
+
+            }
+
+            System.out.println(directoryArrayList);
+
+        });
+
+
+    }*/
 }

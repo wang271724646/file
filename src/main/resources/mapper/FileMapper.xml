@@ -3,6 +3,7 @@
 <mapper namespace="com.example.demo.dao.FileDao">
   <resultMap id="BaseResultMap" type="com.example.demo.model.FileInfo">
     <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="pid" jdbcType="INTEGER" property="pid" />
     <result column="file_name" jdbcType="VARCHAR" property="fileName" />
     <result column="file_type" jdbcType="VARCHAR" property="fileType" />
     <result column="file_size" jdbcType="VARCHAR" property="fileSize" />
@@ -11,7 +12,7 @@
   </resultMap>
 
   <sql id="Base_Column_List">
-    id, file_name, file_type, file_size, file_updated, file_path
+    id, pid, file_name, file_type, file_size, file_updated, file_path
   </sql>
 
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
@@ -33,10 +34,10 @@
   </delete>
 
   <insert id="save" parameterType="com.example.demo.model.FileInfo">
-    insert into file_info (id, file_name, file_type, 
+    insert into file_info (id, pid, file_name, file_type,
       file_size, file_updated, file_path
       )
-    values (#{id,jdbcType=INTEGER}, #{fileName,jdbcType=VARCHAR}, #{fileType,jdbcType=VARCHAR}, 
+    values (#{id,jdbcType=INTEGER}, #{pid,jdbcType=INTEGER}, #{fileName,jdbcType=VARCHAR}, #{fileType,jdbcType=VARCHAR},
       #{fileSize,jdbcType=VARCHAR}, #{fileUpdated,jdbcType=TIMESTAMP}, #{filePath,jdbcType=VARCHAR}
       )
   </insert>
