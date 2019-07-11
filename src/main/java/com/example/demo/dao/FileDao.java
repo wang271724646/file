@@ -1,5 +1,6 @@
 package com.example.demo.dao;
 
+import com.example.demo.dto.FileAndDirectoryVO;
 import com.example.demo.model.FileInfo;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -18,5 +19,7 @@ public interface FileDao {
     int updateByPrimaryKeySelective(FileInfo fileInfo);
 
     List<FileInfo> listFileInfo();
+
+    List<FileAndDirectoryVO> selectFileAndDirectory(Long pid);
 
 }

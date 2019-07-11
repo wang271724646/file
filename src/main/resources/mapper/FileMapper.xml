@@ -28,6 +28,16 @@
     from file_info
   </select>
 
+  <select id="selectFileAndDirectory"  resultType="com.example.demo.dto.FileAndDirectoryVO">
+     SELECT d.*,
+     f.id AS fileId ,f.pid AS filePid,f.file_updated AS fileUpdated,
+     f.file_type AS fileType,f.file_path AS filePath,f.file_name AS fileName,f.file_size AS fileSize
+     FROM
+     (SELECT * FROM directory_info WHERE pid = #{pid , jdbcType=INTEGER}) d
+     LEFT JOIN  file_info f
+     ON f.pid  = d.pid
+  </select>
+
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete from file_info
     where id = #{id,jdbcType=INTEGER}

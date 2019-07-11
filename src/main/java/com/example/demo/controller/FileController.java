@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dao.DirectoryDao;
 import com.example.demo.dao.FileDao;
+import com.example.demo.dto.FileAndDirectoryVO;
 import com.example.demo.model.Directory;
 import com.example.demo.util.GetFileSize;
 import com.example.demo.model.FileInfo;
@@ -150,13 +151,17 @@ public class FileController {
     }
 
 
-    @GetMapping(value = "/findNext/{id}")
-    public List<Directory> findNext(@PathVariable long id) {
+    @GetMapping(value = "/findNext/{pid}")
+    public List<FileAndDirectoryVO> findNext(@PathVariable long pid) {
 
-        List<Directory> listDirectory = directoryDao.selectByPid(id);
+        List<FileAndDirectoryVO> listFileAndDirectoryVO = fileDao.selectFileAndDirectory(pid);
 
-        return listDirectory;
+        System.out.println(listFileAndDirectoryVO);
+
+
+        return listFileAndDirectoryVO;
     }
+
 
 
 
@@ -166,16 +171,18 @@ public class FileController {
         List<Directory> listDirectory = directoryDao.listDirectory();
 
         List<Directory> listTopDirectory = directoryDao.selectByPid(new Long(0));
-
+        
         ArrayList list = new ArrayList<>();
+        
+        if (listTopDirectory.size() != 0) {
+            
+            listTopDirectory.stream().forEach(x -> {
 
-           listTopDirectory.stream().forEach(x -> {
+                getChildren(list, listDirectory, x);
 
-               getChildren(list, listDirectory, x);
+            });
 
-           });
-
-
+        }
 
         return list;
 
@@ -183,17 +190,17 @@ public class FileController {
 
     private Map getChildren(List list, List<Directory> listDirectory, Directory directory) {
 
-        Map<String, Object> Map = new HashMap<>();
+        Map<String, Object> nodeMap = new HashMap<>();
 
-        Map.put("id",directory.getId());
-        Map.put("pid",directory.getPid());
-        Map.put("name",directory.getName());
-        Map.put("path",directory.getPath());
+        nodeMap.put("id", directory.getId());
+        nodeMap.put("pid", directory.getPid());
+        nodeMap.put("name", directory.getName());
+        nodeMap.put("path", directory.getPath());
 
         List<Directory> collect = listDirectory.stream().filter(x -> directory.getId().equals(x.getPid()))
-                                                         .collect(Collectors.toList());
+                .collect(Collectors.toList());
 
-        if (collect.size() != 0 ){
+        if (collect.size() != 0) {
 
             List childList = new ArrayList();
 
@@ -203,12 +210,12 @@ public class FileController {
 
             });
 
-            Map.put("children",childList);
+            nodeMap.put("children", childList);
         }
 
-        if (new Long(0).equals(directory.getPid()))  list.add(Map);
+        if (new Long(0).equals(directory.getPid())) list.add(nodeMap);
 
-     return Map;
+        return nodeMap;
 
     }
 
