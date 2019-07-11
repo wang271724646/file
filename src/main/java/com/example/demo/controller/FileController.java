@@ -2,20 +2,17 @@ package com.example.demo.controller;
 
 import com.example.demo.dao.DirectoryDao;
 import com.example.demo.dao.FileDao;
-import com.example.demo.dto.FileAndDirectoryVO;
 import com.example.demo.model.Directory;
 import com.example.demo.util.GetFileSize;
 import com.example.demo.model.FileInfo;
 import com.sun.deploy.net.URLEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -203,13 +200,22 @@ public class FileController {
 
 
     @GetMapping(value = "/findNext/{pid}")
-    public List<FileAndDirectoryVO> findNext(@PathVariable long pid) {
+    public Map findNext(@PathVariable long pid) {
 
-        if (fileDao.selectFileAndDirectory(pid) != null) {
+        if (fileDao.selectByPid(pid) != null && directoryDao.selectByPid(pid) != null) {
 
-            List<FileAndDirectoryVO> listFileAndDirectoryVO = fileDao.selectFileAndDirectory(pid);
+            List<FileInfo> listFileInfo = fileDao.selectByPid(pid);
 
-            return listFileAndDirectoryVO;
+            List<Directory> listDirectory = directoryDao.selectByPid(pid);
+
+            HashMap<String, Object> fileAndDirectoryMap = new HashMap<>();
+
+            fileAndDirectoryMap.put("文件",listFileInfo);
+
+            fileAndDirectoryMap.put("文件夹",listDirectory);
+
+
+            return fileAndDirectoryMap;
 
         } else {
 
