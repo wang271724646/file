@@ -60,35 +60,74 @@ public class FileController {
                 return "文件不能超过10M";
 
             }
+            if (id == 0) {
 
-            //防止上传重复
-            String newFileName = UUID.randomUUID() + "_" + fileName;
-            //上传存储路径
-            String filePath = directoryDao.selectByPrimaryKey(id).getPath();
-            //拼接"/"才能存在文件夹内。
-            filePath = filePath + "/";
-            System.out.println(filePath);
-            File saveFile = new File(filePath + newFileName);
-            try {
+                //防止上传重复
+                String newFileName = UUID.randomUUID() + "_" + fileName;
+                //上传存储路径
+                String filePath = "E:\\demo2\\src\\main\\resources\\upload";
+                //拼接"/"才能存在文件夹内。
+                filePath = filePath + "/";
+                File saveFile = new File(filePath + newFileName);
+                try {
 
-                file.transferTo(saveFile);
+                    file.transferTo(saveFile);
 
-            } catch (Exception e) {
+                } catch (Exception e) {
 
-                e.printStackTrace();
-                return "上传失败" + e.getMessage();
+                    e.printStackTrace();
+                    return "上传失败" + e.getMessage();
+
+                }
+
+                FileInfo fileInfo = new FileInfo();
+                fileInfo.setFileName(newFileName)
+                        .setFileUpdated(new Date())
+                        .setFilePath(filePath)
+                        .setFileType(fileContentType)
+                        .setFileSize(printSize)
+                        .setPid(id);
+
+                fileDao.save(fileInfo);
+
+                return "上传" + fileName + "成功";
 
             }
+            if (directoryDao.selectByPrimaryKey(id) != null) {
+                //防止上传重复
+                String newFileName = UUID.randomUUID() + "_" + fileName;
+                //上传存储路径
 
-            FileInfo fileInfo = new FileInfo();
-            fileInfo.setFileName(newFileName)
-                    .setFileUpdated(new Date())
-                    .setFilePath(filePath)
-                    .setFileType(fileContentType)
-                    .setFileSize(printSize)
-                    .setPid(id);
+                String filePath = directoryDao.selectByPrimaryKey(id).getPath();
+                //拼接"/"才能存在文件夹内。
+                filePath = filePath + "/";
+                System.out.println(filePath);
+                File saveFile = new File(filePath + newFileName);
+                try {
 
-            fileDao.save(fileInfo);
+                    file.transferTo(saveFile);
+
+                } catch (Exception e) {
+
+                    e.printStackTrace();
+                    return "上传失败" + e.getMessage();
+
+                }
+
+                FileInfo fileInfo = new FileInfo();
+                fileInfo.setFileName(newFileName)
+                        .setFileUpdated(new Date())
+                        .setFilePath(filePath)
+                        .setFileType(fileContentType)
+                        .setFileSize(printSize)
+                        .setPid(id);
+
+                fileDao.save(fileInfo);
+
+            } else {
+
+                return "文件夹不存在";
+            }
 
             return "上传" + fileName + "成功";
 
@@ -102,23 +141,31 @@ public class FileController {
     public ResponseEntity<byte[]> fileDown(@PathVariable int id) throws IOException {
 
         //根据ID获得文件对象
-        FileInfo fileInfo = fileDao.selectByPrimaryKey(id);
-        //获得文件名字
-        String fileName = fileInfo.getFileName();
-        //得到文件路径
-        String filePath = fileInfo.getFilePath();
-        //得到文件
-        File file = new File(filePath + fileName);
-        byte[] body = null;
-        InputStream is = new FileInputStream(file);
-        body = new byte[is.available()];
-        is.read(body);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Disposition", "attchement;filename=" + URLEncoder.encode(fileName, "UTF-8"));
-        HttpStatus statusCode = HttpStatus.OK;
-        ResponseEntity<byte[]> entity = new ResponseEntity<>(body, headers, statusCode);
+        if (fileDao.selectByPrimaryKey(id) != null) {
 
-        return entity;
+            FileInfo fileInfo = fileDao.selectByPrimaryKey(id);
+            //获得文件名字
+            String fileName = fileInfo.getFileName();
+            //得到文件路径
+            String filePath = fileInfo.getFilePath();
+            //得到文件
+            File file = new File(filePath + fileName);
+            byte[] body = null;
+            InputStream is = new FileInputStream(file);
+            body = new byte[is.available()];
+            is.read(body);
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Content-Disposition", "attchement;filename=" + URLEncoder.encode(fileName, "UTF-8"));
+            HttpStatus statusCode = HttpStatus.OK;
+            ResponseEntity<byte[]> entity = new ResponseEntity<>(body, headers, statusCode);
+
+            return entity;
+
+        } else {
+
+            return null;
+
+        }
     }
 
 
@@ -126,6 +173,10 @@ public class FileController {
     public String addDirectory(@RequestBody Directory directory) {
 
         String Path = "E:\\demo2\\src\\main\\resources\\upload";
+
+        if (directory.getPid() == null){
+            return "文件夹添加失败";
+        }
 
         if (directory.getPid() == 0) {
             //拼接存储路径
@@ -154,15 +205,17 @@ public class FileController {
     @GetMapping(value = "/findNext/{pid}")
     public List<FileAndDirectoryVO> findNext(@PathVariable long pid) {
 
-        List<FileAndDirectoryVO> listFileAndDirectoryVO = fileDao.selectFileAndDirectory(pid);
+        if (fileDao.selectFileAndDirectory(pid) != null) {
 
-        System.out.println(listFileAndDirectoryVO);
+            List<FileAndDirectoryVO> listFileAndDirectoryVO = fileDao.selectFileAndDirectory(pid);
 
+            return listFileAndDirectoryVO;
 
-        return listFileAndDirectoryVO;
+        } else {
+
+            return null;
+        }
     }
-
-
 
 
     @GetMapping(value = "/list")
@@ -170,18 +223,22 @@ public class FileController {
 
         List<Directory> listDirectory = directoryDao.listDirectory();
 
+
         List<Directory> listTopDirectory = directoryDao.selectByPid(new Long(0));
-        
+
         ArrayList list = new ArrayList<>();
-        
+
         if (listTopDirectory.size() != 0) {
-            
+
             listTopDirectory.stream().forEach(x -> {
 
                 getChildren(list, listDirectory, x);
 
             });
 
+        } else {
+
+            return null;
         }
 
         return list;
