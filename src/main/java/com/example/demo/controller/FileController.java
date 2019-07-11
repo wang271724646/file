@@ -200,22 +200,22 @@ public class FileController {
 
 
     @GetMapping(value = "/findNext/{pid}")
-    public Map findNext(@PathVariable long pid) {
+    public List findNext(@PathVariable long pid) {
 
-        if (fileDao.selectByPid(pid) != null && directoryDao.selectByPid(pid) != null) {
+        if (fileDao.selectByPid(pid) != null || directoryDao.selectByPid(pid) != null) {
 
             List<FileInfo> listFileInfo = fileDao.selectByPid(pid);
 
             List<Directory> listDirectory = directoryDao.selectByPid(pid);
 
-            HashMap<String, Object> fileAndDirectoryMap = new HashMap<>();
+            ArrayList<Object> fileAndDirectoryList = new ArrayList<>();
 
-            fileAndDirectoryMap.put("文件",listFileInfo);
+            fileAndDirectoryList.add(listFileInfo);
 
-            fileAndDirectoryMap.put("文件夹",listDirectory);
+            fileAndDirectoryList.add(listDirectory);
 
 
-            return fileAndDirectoryMap;
+            return fileAndDirectoryList;
 
         } else {
 
@@ -229,6 +229,10 @@ public class FileController {
 
         List<Directory> listDirectory = directoryDao.listDirectory();
 
+        if (directoryDao.selectByPid(new Long(0)) == null){
+
+            return null;
+        }
 
         List<Directory> listTopDirectory = directoryDao.selectByPid(new Long(0));
 
